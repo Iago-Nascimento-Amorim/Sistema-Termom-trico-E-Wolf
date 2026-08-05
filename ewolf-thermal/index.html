@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Sistema termométrico E-Wolf</title>
+<meta name="theme-color" content="#009F3D" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="E-Wolf Termo" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-header__title" id="header-title">Sistema termométrico<br>E-Wolf</div>
+  <img class="app-header__logo" src="icons/logo.png" alt="Logo E-Wolf CEFET/RJ" />
+</header>
+
+<main id="main">
+
+  <!-- ================= HOME (Início) ================= -->
+  <section class="view active" id="view-home">
+    <div class="home-group">
+      <h1 class="view-title">Início</h1>
+      <p class="updated-at" id="home-updated-at">atualizado em: —</p>
+      <div class="btn-row" style="margin-top:16px">
+        <button class="btn btn--ghost" id="btn-refresh">Atualizar</button>
+      </div>
+      <button class="btn btn--primary" id="btn-new-image">+ Nova imagem</button>
+      <div class="card card--pressable" id="btn-analyze-last">
+        <div class="card-row">
+          <div>
+            <div class="card-title">Analisar últimas imagens</div>
+            <div class="card-sub" id="ble-status">Ver o histórico de análises</div>
+          </div>
+          <span style="color:var(--text-faint)">›</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="home-group">
+      <p class="eyebrow">Último resultado</p>
+      <div id="home-last-result"></div>
+    </div>
+
+    <div class="home-group">
+      <p class="eyebrow">Componentes e placas</p>
+      <div class="home-shortcuts">
+        <button class="btn btn--ghost" id="btn-shortcut-components">Ver componentes salvos</button>
+        <button class="btn btn--ghost" id="btn-shortcut-plates">Ver placas salvas</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn--dark" id="btn-shortcut-new-component">+ Novo componente</button>
+        <button class="btn btn--primary" id="btn-shortcut-new-plate">+ Nova placa</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PLACAS ================= -->
+  <section class="view" id="view-plates">
+    <h1 class="view-title">Placas</h1>
+    <p class="updated-at">atualizado em: <span id="plates-updated-at">—</span></p>
+    <button class="btn btn--primary" id="btn-add-plate-shortcut" style="margin-bottom:16px">+ Nova placa</button>
+    <div id="plates-list" class="scroll-fill"></div>
+  </section>
+
+  <!-- ================= COMPONENTES ================= -->
+  <section class="view" id="view-components">
+    <h1 class="view-title">Componentes</h1>
+    <p class="updated-at">atualizado em: <span id="components-updated-at">—</span></p>
+    <button class="btn btn--dark" id="btn-add-component-shortcut" style="margin-bottom:16px">+ Novo componente</button>
+    <div id="components-list" class="scroll-fill"></div>
+  </section>
+
+  <!-- ================= NOVA PLACA / EDITAR PLACA (editor de pintura) ================= -->
+  <section class="view" id="view-newplate">
+    <h1 class="view-title" id="plateeditor-title">Nova placa</h1>
+
+    <div class="field">
+      <label for="plate-name">Nome da placa</label>
+      <input type="text" id="plate-name" placeholder="Ex: V4 (sem paralelismo)" />
+    </div>
+
+    <div class="zone-toolbar">
+      <div class="zone-toolbar__group">
+        <span class="zone-toolbar__label">Pincel</span>
+        <button class="brush-dot" data-size="1" style="--dot-size:10px"></button>
+        <button class="brush-dot" data-size="2" style="--dot-size:16px"></button>
+        <button class="brush-dot active" data-size="4" style="--dot-size:22px"></button>
+        <button class="brush-dot" data-size="8" style="--dot-size:28px"></button>
+      </div>
+      <button class="tool-btn tool-btn--irrelevant js-tool-irrelevant" id="tool-irrelevant">Irrelevante</button>
+      <button class="tool-btn js-tool-eraser" id="tool-eraser">Borracha</button>
+      <button class="btn-icon js-btn-undo" id="btn-undo" aria-label="Desfazer" title="Desfazer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 7L4 12l5 5M4 12h11a5 5 0 0 1 0 10h-1"/>
+        </svg>
+      </button>
+      <button class="btn-icon js-btn-redo" id="btn-redo" aria-label="Refazer" title="Refazer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 7l5 5-5 5M20 12H9a5 5 0 0 0 0 10h1"/>
+        </svg>
+      </button>
+      <button class="btn-icon" id="btn-clear-canvas" aria-label="Apagar tudo" title="Apagar tudo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>
+        </svg>
+      </button>
+      <button class="btn-icon zone-toolbar__spacer" id="btn-expand-canvas" aria-label="Editar em tela cheia" title="Editar em tela cheia">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 3H3v6M15 3h6v6M3 15v6h6M21 15v6h-6"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="field" id="component-select-field">
+      <label for="plate-component-select">Componente a pintar</label>
+      <select id="plate-component-select"></select>
+      <div class="field-hint">Escolha o componente e pinte, com o dedo ou o cursor, a área da placa onde ele está. A grade é sempre traduzida para 240×180 (resolução da FLIR E50).</div>
+    </div>
+
+    <div class="zone-canvas-wrap">
+      <div class="canvas-tf" id="canvas-tf">
+        <canvas id="zone-canvas" width="240" height="180"></canvas>
+      </div>
+    </div>
+
+    <div class="legend-list" id="zone-legend"></div>
+
+    <button class="btn btn--primary" id="btn-save-plate" style="margin-top:20px">Concluir</button>
+  </section>
+
+  <!-- ================= RESULTADO / ANÁLISE ================= -->
+  <section class="view" id="view-result">
+    <h1 class="view-title">Análise</h1>
+    <p class="updated-at"><span id="result-plate-name">Placa</span> · atualizado em: <span id="result-updated-at">—</span></p>
+    <button class="btn btn--primary" id="btn-new-image-result" style="margin-bottom:16px">+ Nova imagem</button>
+    <div class="thermal-filter-wrap" id="thermal-filter-wrap" hidden>
+      <canvas id="thermal-filter-canvas" width="240" height="180"></canvas>
+    </div>
+    <p class="thermal-filter-legend" id="thermal-filter-legend" hidden>
+      <span><i class="legend-dot legend-dot--green"></i> Dentro do limite</span>
+      <span><i class="legend-dot legend-dot--red"></i> Acima do limite</span>
+      <span><i class="legend-dot legend-dot--gray"></i> Irrelevante</span>
+    </p>
+    <div id="result-list" class="scroll-fill"></div>
+  </section>
+
+  <!-- ================= HISTÓRICO (últimas imagens/análises) ================= -->
+  <section class="view" id="view-history">
+    <div class="btn-row" style="margin-bottom:4px">
+      <button class="btn btn--ghost btn--small" id="btn-history-back">‹ Voltar</button>
+    </div>
+    <h1 class="view-title">Últimas imagens</h1>
+    <p class="updated-at">atualizado em: <span id="history-updated-at">—</span></p>
+    <div id="history-list" class="scroll-fill"></div>
+  </section>
+
+</main>
+
+<nav class="bottom-nav">
+  <button class="nav-item active" data-view="home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+    Início
+  </button>
+  <button class="nav-item" data-view="plates">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
+    Placas
+  </button>
+  <button class="nav-item" data-view="components">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
+    Componentes
+  </button>
+</nav>
+
+<!-- Modal: confirmar preenchimento com "irrelevante" -->
+<div class="modal-backdrop" id="modal-fill-irrelevant">
+  <div class="modal-sheet">
+    <div class="modal-sheet__handle"></div>
+    <p class="modal-sheet__title">Finalizar placa</p>
+    <p class="modal-sheet__body">Existem pontos da grade que não foram pintados. Uma placa não pode ser salva com pontos em branco — preencha-os como "irrelevante" ou volte a pintar.</p>
+    <div class="btn-row">
+      <button class="btn btn--ghost" id="btn-fill-back">Voltar</button>
+      <button class="btn btn--primary" id="btn-fill-yes">Preencher como irrelevante</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: novo/editar componente -->
+<div class="modal-backdrop" id="modal-component">
+  <div class="modal-sheet">
+    <div class="modal-sheet__handle"></div>
+    <p class="modal-sheet__title" id="component-modal-title">Novo componente</p>
+    <div class="field">
+      <label for="comp-name">Nome do componente</label>
+      <input type="text" id="comp-name" placeholder="Ex: Mosfet" />
+    </div>
+    <div class="field">
+      <label for="comp-code">Código</label>
+      <input type="text" id="comp-code" placeholder="Ex: IRFB4110" />
+    </div>
+    <div class="field">
+      <label for="comp-tmax">Temperatura máxima (em °C)</label>
+      <input type="number" id="comp-tmax" placeholder="Ex: 175" />
+      <div class="field-hint">Use o Tp calculado no levantamento de datasheets (75% de min(Tj, Tstg)).</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn--ghost" id="btn-cancel-component">Cancelar</button>
+      <button class="btn btn--primary" id="btn-save-component">Criar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: excluir componente -->
+<div class="modal-backdrop" id="modal-delete-component">
+  <div class="modal-sheet">
+    <div class="modal-sheet__handle"></div>
+    <p class="modal-sheet__title">Excluir componente</p>
+    <p class="field-warning">Ao excluir, todos os usos desse componente em placas salvas serão marcados como "irrelevante".</p>
+    <p class="field-warning" id="delete-component-cascade-warning" hidden></p>
+    <div class="field">
+      <label for="confirm-delete-component-input">Digite "excluir" para confirmar</label>
+      <input type="text" id="confirm-delete-component-input" placeholder="excluir" autocomplete="off" />
+    </div>
+    <div class="btn-row">
+      <button class="btn btn--ghost" id="btn-cancel-delete-component">Cancelar</button>
+      <button class="btn btn--danger" id="btn-confirm-delete-component" disabled>✕ Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: excluir placa -->
+<div class="modal-backdrop" id="modal-delete-plate">
+  <div class="modal-sheet">
+    <div class="modal-sheet__handle"></div>
+    <p class="modal-sheet__title">Excluir placa</p>
+    <div class="field">
+      <label for="confirm-delete-plate-input">Digite "excluir" para confirmar</label>
+      <input type="text" id="confirm-delete-plate-input" placeholder="excluir" autocomplete="off" />
+    </div>
+    <div class="btn-row">
+      <button class="btn btn--ghost" id="btn-cancel-delete-plate">Cancelar</button>
+      <button class="btn btn--danger" id="btn-confirm-delete-plate" disabled>✕ Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: excluir resultado/análise -->
+<div class="modal-backdrop" id="modal-delete-result">
+  <div class="modal-sheet">
+    <div class="modal-sheet__handle"></div>
+    <p class="modal-sheet__title">Excluir análise</p>
+    <div class="field">
+      <label for="confirm-delete-result-input">Digite "excluir" para confirmar</label>
+      <input type="text" id="confirm-delete-result-input" placeholder="excluir" autocomplete="off" />
+    </div>
+    <div class="btn-row">
+      <button class="btn btn--ghost" id="btn-cancel-delete-result">Cancelar</button>
+      <button class="btn btn--danger" id="btn-confirm-delete-result" disabled>✕ Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: nova imagem (upload FLIR / captura BLE) -->
+<div class="modal-backdrop" id="modal-new-image">
+  <div class="modal-sheet">
+    <div class="modal-sheet__handle"></div>
+    <p class="modal-sheet__title">Nova imagem</p>
+
+    <div class="field">
+      <label for="new-image-plate-select">Placa de referência</label>
+      <select id="new-image-plate-select"></select>
+    </div>
+
+    <p class="field-hint" style="margin-bottom:16px">Selecione o arquivo original exportado da FLIR (JPEG com metadados/dado térmico embutido — sem recompressão, print ou edição). A resolução da foto pode variar entre modelos; ela não é o critério de validação.</p>
+
+    <input type="file" accept="image/*" id="new-image-file-input" hidden>
+    <button class="btn btn--primary" id="btn-new-image-upload">Selecionar imagem</button>
+    <p class="field-warning" id="new-image-error" hidden></p>
+
+    <div class="dev-test-corner" style="margin-top:16px">
+      <button class="btn btn--dev" id="btn-test-analysis">Análise teste (simulada)</button>
+    </div>
+
+    <button class="btn btn--ghost" id="btn-close-new-image" style="margin-top:12px">Fechar</button>
+  </div>
+</div>
+
+<!-- Edição ampliada da placa (tela cheia, com pinça/rotação) -->
+<div class="canvas-expand" id="canvas-expand" hidden>
+  <div class="canvas-expand__toolbar">
+    <button class="btn-icon" id="btn-collapse-canvas" aria-label="Voltar ao editor">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </button>
+    <div class="canvas-expand__field-slot" id="canvas-expand-field-slot"></div>
+    <div class="zone-toolbar zone-toolbar--modal">
+      <div class="zone-toolbar__group">
+        <span class="zone-toolbar__label">Pincel</span>
+        <button class="brush-dot" data-size="1" style="--dot-size:12px"></button>
+        <button class="brush-dot" data-size="2" style="--dot-size:18px"></button>
+        <button class="brush-dot" data-size="4" style="--dot-size:24px"></button>
+        <button class="brush-dot" data-size="8" style="--dot-size:32px"></button>
+      </div>
+      <button class="tool-btn tool-btn--irrelevant js-tool-irrelevant" id="tool-irrelevant-modal">Irrelevante</button>
+      <button class="tool-btn js-tool-eraser" id="tool-eraser-modal">Borracha</button>
+      <div class="undo-redo-row">
+        <button class="btn-icon js-btn-undo" id="btn-undo-modal" aria-label="Desfazer" title="Desfazer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 7L4 12l5 5M4 12h11a5 5 0 0 1 0 10h-1"/>
+          </svg>
+        </button>
+        <button class="btn-icon js-btn-redo" id="btn-redo-modal" aria-label="Refazer" title="Refazer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 7l5 5-5 5M20 12H9a5 5 0 0 0 0 10h1"/>
+          </svg>
+        </button>
+        <button class="btn-icon" id="btn-clear-canvas-modal" aria-label="Apagar tudo" title="Apagar tudo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="canvas-expand__stage" id="canvas-expand-stage"></div>
+  <p class="canvas-expand__hint">Use dois dedos pra ampliar e rotacionar a placa. Um dedo pinta.</p>
+</div>
+
+<script type="module" src="js/flir/FlirParser.js"></script>
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
